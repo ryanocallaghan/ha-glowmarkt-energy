@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Bright login",
+        "description": "Use the same email and password as the Bright app.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "charges": {
+        "title": "Your tariff",
+        "description": "Prices including VAT. For a two-tier tariff such as Utilita Smart Energy, set the First Rate and its daily allowance (e.g. 2 kWh); usage after the allowance is charged at the unit rate. Leave the allowance at 0 for a single-rate tariff. Leave every price for a fuel at 0 to skip cost tracking for it.",
+        "data": {
+          "electricity_unit_rate": "Electricity unit rate (Saver Rate on a two-tier tariff)",
+          "electricity_standing_charge": "Electricity standing charge",
+          "electricity_first_rate": "Electricity First Rate",
+          "electricity_first_rate_kwh": "Electricity First Rate allowance per day",
+          "gas_unit_rate": "Gas unit rate (Saver Rate on a two-tier tariff)",
+          "gas_standing_charge": "Gas standing charge",
+          "gas_first_rate": "Gas First Rate",
+          "gas_first_rate_kwh": "Gas First Rate allowance per day"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Bright login expired",
+        "description": "Bright rejected the password for {username}. Enter the current one.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Bright rejected that email or password.",
+      "cannot_connect": "Could not reach the Glowmarkt API. Try again in a few minutes.",
+      "no_meters": "This Bright account has no electricity or gas meter data yet."
+    },
+    "abort": {
+      "already_configured": "This Bright account is already set up.",
+      "reauth_successful": "Password updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Your tariff",
+        "description": "Prices including VAT. For a two-tier tariff such as Utilita Smart Energy, set the First Rate and its daily allowance (e.g. 2 kWh); usage after the allowance is charged at the unit rate. Leave the allowance at 0 for a single-rate tariff. New prices apply from the last 3 days onward; older costs keep the price they were imported with.",
+        "data": {
+          "electricity_unit_rate": "Electricity unit rate (Saver Rate on a two-tier tariff)",
+          "electricity_standing_charge": "Electricity standing charge",
+          "electricity_first_rate": "Electricity First Rate",
+          "electricity_first_rate_kwh": "Electricity First Rate allowance per day",
+          "gas_unit_rate": "Gas unit rate (Saver Rate on a two-tier tariff)",
+          "gas_standing_charge": "Gas standing charge",
+          "gas_first_rate": "Gas First Rate",
+          "gas_first_rate_kwh": "Gas First Rate allowance per day"
+        }
+      }
+    }
+  }
+}

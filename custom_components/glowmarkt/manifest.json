@@ -1,0 +1,17 @@
+{
+  "domain": "glowmarkt",
+  "name": "Glowmarkt (Bright) Energy",
+  "codeowners": [
+    "@ryanocallaghan"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "recorder"
+  ],
+  "documentation": "https://github.com/ryanocallaghan/ha-glowmarkt-energy",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/ryanocallaghan/ha-glowmarkt-energy/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
