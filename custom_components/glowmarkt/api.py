@@ -98,6 +98,18 @@ class GlowmarktClient:
         except GlowmarktError:
             pass
 
+    async def first_reading(self, resource_id: str) -> datetime | None:
+        """Return when the resource's data starts, if Bright says."""
+        try:
+            data = await self._get(f"/resource/{resource_id}/first-time")
+        except GlowmarktAuthError:
+            raise
+        except GlowmarktError:
+            return None
+        info = data.get("data") if isinstance(data, dict) else None
+        ts = info.get("firstTs") if isinstance(info, dict) else None
+        return datetime.fromtimestamp(ts, UTC) if isinstance(ts, int | float) else None
+
     async def readings(
         self, resource_id: str, start: datetime, end: datetime, period: str = "PT1H"
     ) -> list[tuple[datetime, float]]:

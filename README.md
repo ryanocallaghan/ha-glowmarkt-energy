@@ -14,15 +14,21 @@ Works for any UK supplier whose SMETS2 (or DCC-migrated SMETS1) meter shows up i
 
 Also a few sensors for ordinary dashboards: **usage today**, **cost today** and **latest data** (the newest hour Bright has data for) per fuel.
 
-The DCC delivers readings hours late. That's why the data comes in as statistics stamped at the hour it was used, not as a live sensor. Each update re-imports the last 3 days, so late readings fill in. On first setup it backfills 60 days.
+The DCC delivers readings hours late. That's why the data comes in as statistics stamped at the hour it was used, not as a live sensor. Each update re-imports the last 3 days, so late readings fill in.
+
+## History
+
+Set **History to import (months)** during setup or under **Configure**. The default is 12; **0 imports everything Bright has**, from your meter's first reading.
+
+History loads in the background after setup, in 10-day chunks every 15 seconds, so a year takes about 10 minutes. The Energy dashboard fills in as it goes. Raising the setting later re-imports all history from the new start date and recalculates its costs at your current prices. Lowering it keeps what's already imported.
 
 ## Install
 
-**HACS (custom repository):** push this folder to a GitHub repo, then in HACS → ⋮ → Custom repositories add the repo URL with type *Integration*, install **Glowmarkt (Bright) Energy**, and restart.
+**HACS (custom repository):** in HACS → ⋮ → Custom repositories add `https://github.com/ryanocallaghan/ha-glowmarkt-energy` with type *Integration*, install **Glowmarkt (Bright) Energy**, and restart.
 
 **Manual:** copy `custom_components/glowmarkt` into your Home Assistant `config/custom_components/` folder and restart.
 
-Then go to **Settings → Devices & services → Add integration → Glowmarkt (Bright) Energy**. Log in with your Bright email and password, then enter your tariff in pence, including VAT. Change the tariff any time with the integration's **Configure** button.
+Then go to **Settings → Devices & services → Add integration → Glowmarkt (Bright) Energy**. Log in with your Bright email and password, then choose how much history to load and enter your tariff in pence, including VAT. Change the tariff any time with the integration's **Configure** button.
 
 ## Energy dashboard
 

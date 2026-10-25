@@ -6,8 +6,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 
 from .api import GlowmarktClient
+from .const import DOMAIN
 from .coordinator import GlowmarktCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -30,3 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GlowmarktConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: GlowmarktConfigEntry) -> bool:
     """Unload a Bright account."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: GlowmarktConfigEntry) -> None:
+    """Forget import progress when the account is removed."""
+    await Store(hass, 1, f"{DOMAIN}.{entry.entry_id}").async_remove()

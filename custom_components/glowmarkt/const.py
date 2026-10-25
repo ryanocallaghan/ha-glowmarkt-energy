@@ -20,10 +20,19 @@ CONF_STANDING_CHARGE = "standing_charge"  # p/day
 CONF_FIRST_RATE = "first_rate"  # p/kWh
 CONF_FIRST_RATE_KWH = "first_rate_kwh"  # kWh/day, 0 = off
 
+# How many months of history to import; 0 = everything Bright has.
+CONF_HISTORY_MONTHS = "history_months"
+DEFAULT_HISTORY_MONTHS = 12
+# Used for 0 when Bright doesn't say when the meter's data starts.
+FALLBACK_HISTORY_MONTHS = 24
+
 UPDATE_INTERVAL = timedelta(minutes=30)
-# How far back to import on first run.
-BACKFILL = timedelta(days=60)
+# While importing history, one chunk per update at this interval.
+BACKFILL_INTERVAL = timedelta(seconds=15)
+RETRY_INTERVAL = timedelta(minutes=5)
+# How often to ask the DCC to fetch fresh data from the meter, in seconds.
+CATCHUP_INTERVAL = 6 * 3600
 # DCC data arrives late, so every update re-imports this trailing window.
 REFRESH_WINDOW = timedelta(days=3)
-# Maximum span requested from the API in one call.
+# Span of one history chunk and of one API request.
 CHUNK = timedelta(days=10)

@@ -29,8 +29,10 @@ from .api import GlowmarktAuthError, GlowmarktClient, GlowmarktError
 from .const import (
     CONF_FIRST_RATE,
     CONF_FIRST_RATE_KWH,
+    CONF_HISTORY_MONTHS,
     CONF_STANDING_CHARGE,
     CONF_UNIT_RATE,
+    DEFAULT_HISTORY_MONTHS,
     DOMAIN,
     FUELS,
 )
@@ -58,6 +60,15 @@ def _price(unit: str) -> NumberSelector:
 
 CHARGES_SCHEMA = vol.Schema(
     {
+        vol.Required(
+            CONF_HISTORY_MONTHS, default=DEFAULT_HISTORY_MONTHS
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=0, max=120, step=1, mode=NumberSelectorMode.BOX, unit_of_measurement="months"
+            )
+        ),
+    }
+    | {
         vol.Required(f"{fuel}_{key}", default=0): _price(unit)
         for fuel in FUELS
         for key, unit in (

@@ -10,9 +10,10 @@
         }
       },
       "charges": {
-        "title": "Your tariff",
+        "title": "History and tariff",
         "description": "Prices including VAT. For a two-tier tariff such as Utilita Smart Energy, set the First Rate and its daily allowance (e.g. 2 kWh); usage after the allowance is charged at the unit rate. Leave the allowance at 0 for a single-rate tariff. Leave every price for a fuel at 0 to skip cost tracking for it.",
         "data": {
+          "history_months": "History to import (months, 0 = all)",
           "electricity_unit_rate": "Electricity unit rate (Saver Rate on a two-tier tariff)",
           "electricity_standing_charge": "Electricity standing charge",
           "electricity_first_rate": "Electricity First Rate",
@@ -21,6 +22,9 @@
           "gas_standing_charge": "Gas standing charge",
           "gas_first_rate": "Gas First Rate",
           "gas_first_rate_kwh": "Gas First Rate allowance per day"
+        },
+        "data_description": {
+          "history_months": "How far back to load from Bright. 0 loads everything since your meter's first reading. History loads in 10-day chunks in the background after setup. Raising this later re-imports all history using your current prices."
         }
       },
       "reauth_confirm": {
@@ -44,9 +48,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Your tariff",
+        "title": "History and tariff",
         "description": "Prices including VAT. For a two-tier tariff such as Utilita Smart Energy, set the First Rate and its daily allowance (e.g. 2 kWh); usage after the allowance is charged at the unit rate. Leave the allowance at 0 for a single-rate tariff. New prices apply from the last 3 days onward; older costs keep the price they were imported with.",
         "data": {
+          "history_months": "History to import (months, 0 = all)",
           "electricity_unit_rate": "Electricity unit rate (Saver Rate on a two-tier tariff)",
           "electricity_standing_charge": "Electricity standing charge",
           "electricity_first_rate": "Electricity First Rate",
@@ -55,6 +60,9 @@
           "gas_standing_charge": "Gas standing charge",
           "gas_first_rate": "Gas First Rate",
           "gas_first_rate_kwh": "Gas First Rate allowance per day"
+        },
+        "data_description": {
+          "history_months": "How far back to load from Bright. 0 loads everything since your meter's first reading. History loads in 10-day chunks in the background after setup. Raising this later re-imports all history using your current prices."
         }
       }
     }
