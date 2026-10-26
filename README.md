@@ -45,7 +45,6 @@ The two can run side by side; this one uses different statistic IDs. Once you're
 ## Check your login outside Home Assistant
 
 ```bash
-pip install requests
 python3 scripts/check_api.py
 ```
 
