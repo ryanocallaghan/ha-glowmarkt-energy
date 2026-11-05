@@ -20,7 +20,7 @@ The DCC delivers readings hours late. That's why the data comes in as statistics
 
 Set **History to import (months)** during setup or under **Configure**. The default is 12; **0 imports everything Bright has**, from your meter's first reading.
 
-History loads in the background after setup, in 10-day chunks every 15 seconds, so a year takes about 10 minutes. The Energy dashboard fills in as it goes. Raising the setting later re-imports all history from the new start date and recalculates its costs at your current prices. Lowering it keeps what's already imported.
+History loads in the background after setup, in 9-day chunks every 15 seconds, so a year takes about 10 minutes. The Energy dashboard fills in as it goes. Raising the setting later re-imports all history from the new start date and recalculates its costs at your current prices. Lowering it keeps what's already imported.
 
 ## Install
 

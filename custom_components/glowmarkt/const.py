@@ -34,5 +34,5 @@ RETRY_INTERVAL = timedelta(minutes=5)
 CATCHUP_INTERVAL = 6 * 3600
 # DCC data arrives late, so every update re-imports this trailing window.
 REFRESH_WINDOW = timedelta(days=3)
-# Span of one history chunk and of one API request.
+# Longest span of one API request. History chunks are a day shorter (see coordinator).
 CHUNK = timedelta(days=10)

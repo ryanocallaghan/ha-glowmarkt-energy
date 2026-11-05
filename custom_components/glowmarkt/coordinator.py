@@ -20,7 +20,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -238,8 +238,11 @@ class GlowmarktCoordinator(DataUpdateCoordinator[dict[str, FuelSummary]]):
         backfilling = cursor < recent
         if backfilling:
             start = cursor
-            # Ten local days on, landing on local midnight across clock changes.
-            end = min(local_midnight(cursor + CHUNK + timedelta(hours=12)), recent)
+            # Nine local days on, landing on local midnight. Staying under CHUNK
+            # keeps this to one request: a 10-day chunk across the October clock
+            # change is 241 hours, leaving a 1-hour request (from == to) that
+            # Bright rejects with HTTP 400.
+            end = min(local_midnight(cursor + CHUNK - timedelta(hours=12)), recent)
             next_cursor = end
         else:
             start = min(cursor, recent)
@@ -262,7 +265,12 @@ class GlowmarktCoordinator(DataUpdateCoordinator[dict[str, FuelSummary]]):
         usage_sum = cost_sum = 0.0
         if start > chain_start:
             recorder = get_instance(self.hass)
-            await recorder.async_block_till_done()
+            # Make sure the previous chunk is written before reading its totals.
+            # Not while HA is starting: the recorder doesn't get to the request
+            # until startup ends, so setup would hang until bootstrap times out
+            # (and nothing from this integration is queued at that point anyway).
+            if self.hass.state is CoreState.running:
+                await recorder.async_block_till_done()
             previous = await recorder.async_add_executor_job(
                 statistics_during_period,
                 self.hass,

@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import UTC, datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -11,12 +11,17 @@ from pytest_homeassistant_custom_component.components.recorder.common import (
     async_wait_recording_done,
 )
 
-from custom_components.glowmarkt.api import GlowmarktAuthError
+from custom_components.glowmarkt.api import (
+    BASE_URL,
+    GlowmarktAuthError,
+    GlowmarktClient,
+    GlowmarktError,
+)
 from custom_components.glowmarkt.const import DOMAIN
 from homeassistant import config_entries
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 CLIENT = "custom_components.glowmarkt.api.GlowmarktClient"
@@ -63,10 +68,15 @@ class FakeMeter:
     def __init__(self, kwh: float) -> None:
         self.kwh = kwh
         self.calls = 0
+        self.requests: list[tuple[datetime, datetime]] = []
 
     async def readings(self, resource_id, start, end, period="PT1H"):
         self.calls += 1
+        self.requests.append((start, end))
         assert end - start <= timedelta(days=10)
+        if end <= start:
+            # Bright rejects an empty range.
+            raise GlowmarktError(f"GET /resource/{resource_id}/readings returned HTTP 400")
         hour = start.replace(minute=0, second=0, microsecond=0)
         out = []
         while hour <= end:
@@ -184,7 +194,7 @@ async def test_setup_is_quick_then_backfills_in_chunks(
     assert entry.runtime_data.update_interval == timedelta(seconds=15)
 
     runs = await _finish_backfill(hass, entry)
-    assert runs >= 6  # ~62 days in 10-day chunks, then one normal update
+    assert runs >= 6  # ~62 days in 9-day chunks, then one normal update
     assert entry.runtime_data.update_interval == timedelta(minutes=30)
 
     usage = await _stats(hass, "glowmarkt:electricity_consumption")
@@ -294,3 +304,79 @@ async def test_hanging_catchup_does_not_block_setup(
             assert await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.LOADED
         assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_backfill_across_october_clock_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, meter: FakeMeter
+) -> None:
+    """A chunk over the October clock change makes no empty (HTTP 400) request."""
+    # 22 Oct 2025 00:00 BST; BST ends on 26 Oct 2025.
+    first_midnight = datetime(2025, 10, 21, 23, tzinfo=UTC)
+    with patch(f"{CLIENT}.first_reading", return_value=first_midnight + timedelta(hours=10)):
+        entry = await _setup(hass, freezer, {**CHARGES, "history_months": 0})
+        await _finish_backfill(hass, entry)
+
+    assert entry.runtime_data.last_update_success
+    assert meter.requests[0][0] == first_midnight
+    assert all(start < end for start, end in meter.requests)
+
+    usage = await _stats(hass, "glowmarkt:electricity_consumption")
+    assert usage[0][0] == first_midnight
+    assert usage[-1][0] == LAST_HOUR
+    assert all(b[0] - a[0] == timedelta(hours=1) for a, b in zip(usage, usage[1:]))
+    assert usage[-1][2] == pytest.approx(_hours(first_midnight) * 1.0)
+
+
+async def test_setup_during_startup_does_not_wait_for_recorder(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    meter: FakeMeter,
+    hass_storage,
+) -> None:
+    """With saved progress, setup while HA starts doesn't wait on the recorder.
+
+    The recorder only handles that wait once startup is over, so waiting
+    there hangs setup until the bootstrap timeout cancels it.
+    """
+    freezer.move_to(NOW)
+    await hass.config.async_update(currency="GBP", time_zone="Europe/London")
+    entry = MockConfigEntry(domain=DOMAIN, data=LOGIN, options=CHARGES, entry_id="abc")
+    entry.add_to_hass(hass)
+    hass_storage[f"{DOMAIN}.abc"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": f"{DOMAIN}.abc",
+        "data": {
+            "electricity": {
+                "from": TWO_MONTHS_AGO.isoformat(),
+                "cursor": datetime(2026, 10, 19, 23, tzinfo=UTC).isoformat(),
+            }
+        },
+    }
+
+    wait = AsyncMock()
+    hass.set_state(CoreState.starting)
+    try:
+        with patch(
+            "homeassistant.components.recorder.core.Recorder.async_block_till_done", wait
+        ):
+            async with asyncio.timeout(5):
+                assert await hass.config_entries.async_setup(entry.entry_id)
+            assert entry.state is ConfigEntryState.LOADED
+            wait.assert_not_awaited()
+
+            # Once running, it waits for earlier writes again.
+            hass.set_state(CoreState.running)
+            await entry.runtime_data.async_refresh()
+            wait.assert_awaited()
+    finally:
+        hass.set_state(CoreState.running)
+
+
+async def test_timeout_error_says_timeout(hass: HomeAssistant, aioclient_mock) -> None:
+    """A timeout's message is empty, so the error names the exception type."""
+    aioclient_mock.post(f"{BASE_URL}/auth", json={"valid": True, "token": "t", "exp": 4e9})
+    aioclient_mock.get(f"{BASE_URL}/resource/elec/readings", exc=TimeoutError())
+    client = GlowmarktClient(aioclient_mock.create_session(hass.loop), "me", "pw")
+    with pytest.raises(GlowmarktError, match=r"readings failed: TimeoutError$"):
+        await client.readings("elec", NOW - timedelta(hours=2), NOW)

@@ -22,6 +22,11 @@ class GlowmarktAuthError(GlowmarktError):
     """Credentials were rejected."""
 
 
+def _describe(err: Exception) -> str:
+    """Name the exception type too: a timeout's message is empty."""
+    return f"{type(err).__name__}: {err}" if str(err) else type(err).__name__
+
+
 class GlowmarktClient:
     """Talk to the Glowmarkt API with a Bright username and password."""
 
@@ -47,7 +52,7 @@ class GlowmarktClient:
                 data = await resp.json(content_type=None)
                 status = resp.status
         except (aiohttp.ClientError, TimeoutError, ValueError) as err:
-            raise GlowmarktError(f"Login request failed: {err}") from err
+            raise GlowmarktError(f"Login request failed: {_describe(err)}") from err
 
         if status in (401, 403) or not isinstance(data, dict) or not data.get("valid"):
             raise GlowmarktAuthError("Bright rejected the username or password")
@@ -79,7 +84,7 @@ class GlowmarktClient:
                         raise GlowmarktError(f"GET {path} returned HTTP {resp.status}")
                     return await resp.json(content_type=None)
             except (aiohttp.ClientError, TimeoutError, ValueError) as err:
-                raise GlowmarktError(f"GET {path} failed: {err}") from err
+                raise GlowmarktError(f"GET {path} failed: {_describe(err)}") from err
         raise GlowmarktError(f"GET {path} failed")
 
     async def resources(self) -> list[dict[str, Any]]:
